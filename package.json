@@ -1,0 +1,29 @@
+{
+  "name": "employee-manager",
+  "version": "1.0.0",
+  "description": "A CMS, for employee management, utilizing Node.js, Inquirer, and MySQL to help users track, update, and delete employees from a database. ",
+  "main": "server.js",
+  "scripts": {
+    "test": "npm run test",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KaitlynCarlson/Employee-Manager.git"
+  },
+  "keywords": [
+    "npm",
+    "run",
+    "start"
+  ],
+  "author": "Kaitlyn Carlson",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/KaitlynCarlson/Employee-Manager/issues"
+  },
+  "homepage": "https://github.com/KaitlynCarlson/Employee-Manager#readme",
+  "dependencies": {
+    "inquirer": "^7.0.4",
+    "mysql": "^2.18.1"
+  }
+}
