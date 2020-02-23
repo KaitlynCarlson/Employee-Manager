@@ -235,9 +235,7 @@ function viewByManager() {
 function addEmployee() {
   const query = `SELECT * FROM roles ;`;
   connection.query(query, (err, res) => {
-    console.log(res);
     const employeeRole = res.map(res => `${res.id} ${res.title}`);
-    console.log(employeeRole);
     inquirer
       .prompt([
         {
@@ -277,10 +275,12 @@ function addEmployee() {
   });
 }
 function removeEmployee() {
-  const query = "SELECT id, first_name,last_name FROM employees;";
+  const query = "SELECT * FROM employees;";
   connection.query(query, (err, res) => {
     console.log(res);
-    const employees = res.map(res => `${res.first_name} ${res.last_name}`);
+    const employees = res.map(
+      res => `${res.id} ${res.first_name} ${res.last_name}`
+    );
     console.log(employees);
     inquirer
       .prompt([
@@ -292,15 +292,14 @@ function removeEmployee() {
         }
       ])
       .then(answer => {
-        connection.query(
-          "DELETE FROM employees WHERE first_name AND last_name;",
-          [],
-          err => {
-            if (err) throw err;
-            console.log(`${answer.employeeDelete} successfully removed!`);
-            prompt();
-          }
-        );
+        const str = answer.employeeDelete;
+        var res = str.replace(/\D/g, "");
+        console.log(res);
+        connection.query("DELETE FROM employees WHERE id=?;", [res], err => {
+          if (err) throw err;
+          console.log(`${answer.employeeDelete} successfully removed!`);
+          prompt();
+        });
       });
   });
 }
