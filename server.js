@@ -6,6 +6,7 @@ const inquirer = require("inquirer");
 
 const promptMessages = {
   viewAll: "View all employees",
+  viewRoles: "View all roles",
   viewAllByDepartment: "View all employees by department",
   viewAllByManager: "View all employees by manager",
   addEmployee: "Add employee",
@@ -51,6 +52,7 @@ function prompt() {
       message: "What would you like to do?",
       choices: [
         promptMessages.viewAll,
+        promptMessages.viewRoles,
         promptMessages.viewAllByDepartment,
         promptMessages.viewAllByManager,
         promptMessages.addEmployee,
@@ -65,6 +67,9 @@ function prompt() {
       switch (answer.action) {
         case promptMessages.viewAll:
           viewAll();
+          break;
+        case promptMessages.viewRoles:
+          viewRoles();
           break;
         case promptMessages.viewAllByDepartment:
           viewByDepartment();
@@ -147,6 +152,33 @@ function viewByDepartment() {
       );
   });
 }
+function viewRoles() {
+  const query = `SELECT * FROM roles ;`;
+  connection.query(query, (err, res) => {
+    const roles = res.map(res => `${res.department_name}`);
+    inquirer
+      .prompt([
+        {
+          name: "selectDepartment",
+          type: "list",
+          message: "Which roles would you like to view employee details on?",
+          choices: roles
+        }
+      ])
+      .then(answer => {
+        connection.query(`SELECT ER.id AS "Employee ID", ER.first_name AS "First Name",  ER.last_name AS "Last Name", roles.title AS "Employee Role", departments.department_name AS Department, roles.salary AS Salary, EM.first_name AS "Manager"
+        FROM employees ER LEFT JOIN employees EM
+        ON ER.manager_id = EM.id
+        INNER JOIN roles
+        ON ER.role_id = roles.id
+        INNER JOIN departments
+        ON roles.department_id = departments.id
+        WHERE roles.title = "Junior Software Engineer"
+        ORDER BY ER.id;
+        `);
+      });
+  });
+}
 function viewByManager() {}
 function addEmployee() {
   inquirer
@@ -170,12 +202,6 @@ function addEmployee() {
         name: "department",
         type: "input",
         message: "Please select the new employee's new department."
-      },
-
-      {
-        name: "manager",
-        type: "input",
-        message: "Please select new employee's manager."
       }
     ])
     .then(answer => {
