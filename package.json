@@ -23,6 +23,8 @@
   },
   "homepage": "https://github.com/KaitlynCarlson/Employee-Manager#readme",
   "dependencies": {
+    "cfonts": "^2.7.0",
+    "console.table": "^0.10.0",
     "inquirer": "^7.0.4",
     "mysql": "^2.18.1"
   }
