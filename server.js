@@ -8,12 +8,11 @@ const promptMessages = {
   viewAll: "View all employees",
   viewRoles: "View all employees by role",
   viewAllByDepartment: "View all employees by department",
-  viewAllByManager: "View all employees by manager",
-  addEmployee: "Add employee",
+  addEmployee: "Add a new employee",
+  addRole: "Add a new role",
+  addDepartment: "Add a new department",
   removeEmployee: "Remove employee",
-  updateEmployee: "Update employee record",
   updateEmployeeRole: "Update employee role",
-  updateEmployeeManager: "Update employee manager",
   exit: "Exit Employee Manager"
 };
 
@@ -54,12 +53,11 @@ function prompt() {
         promptMessages.viewAll,
         promptMessages.viewRoles,
         promptMessages.viewAllByDepartment,
-        promptMessages.viewAllByManager,
         promptMessages.addEmployee,
+        promptMessages.addRole,
+        promptMessages.addDepartment,
         promptMessages.removeEmployee,
-        promptMessages.updateEmployee,
         promptMessages.updateEmployeeRole,
-        promptMessages.updateEmployeeManager,
         promptMessages.exit
       ]
     })
@@ -74,24 +72,22 @@ function prompt() {
         case promptMessages.viewAllByDepartment:
           viewByDepartment();
           break;
-        case promptMessages.viewAllByManager:
-          viewByManager();
-          break;
         case promptMessages.addEmployee:
           addEmployee();
+          break;
+        case promptMessages.addRole:
+          addRole();
+          break;
+        case promptMessages.addDepartment:
+          addDepartment();
           break;
         case promptMessages.removeEmployee:
           removeEmployee();
           break;
-        case promptMessages.updateEmployee:
-          updateEmployee();
-          break;
         case promptMessages.updateEmployeeRole:
           updateEmployeeRole();
           break;
-        case promptMessages.updateEmployeeManager:
-          updateEmployeeManager();
-          break;
+
         case promptMessages.exit:
           cfonts.say("So long!", {
             font: "block",
@@ -218,20 +214,7 @@ function viewRoles() {
       });
   });
 }
-function viewByManager() {
-  const query = `SELECT * FROM employees;`;
-  connection.query(query, (err, res) => {
-    const manager = res.map(res => `${res.manager_id}`);
-    inquirer.prompt([
-      {
-        name: "selectRole",
-        type: "list",
-        message: "Which roles would you like to view employee details on?",
-        choices: manager
-      }
-    ]);
-  });
-}
+
 function addEmployee() {
   const query = `SELECT * FROM roles ;`;
   connection.query(query, (err, res) => {
@@ -303,6 +286,147 @@ function removeEmployee() {
       });
   });
 }
-function updateEmployee() {}
-function updateEmployeeRole() {}
-function updateEmployeeManager() {}
+function updateEmployeeRole() {
+  const query = `SELECT * FROM employees`;
+  connection.query(query, (err, res) => {
+    const employees = res.map(
+      res => `${res.id} ${res.first_name} ${res.last_name}`
+    );
+    inquirer
+      .prompt({
+        name: "whichEmployeeUpdate",
+        type: "list",
+        message: "Which employee's role would you like to update?",
+        choices: employees
+      })
+      .then(answer => {
+        let employee = answer.whichEmployeeUpdate;
+        let employeeId = employee.replace(/\D/g, "");
+        inquirer
+          .prompt({
+            name: "updateRoleTo",
+            type: "input",
+            message: "What is the new role title?"
+          })
+          .then(answer2 => {
+            connection.query(
+              `SELECT * FROM roles WHERE title=?`,
+              [answer2.updateRoleTo],
+              (err, res) => {
+                const newRoleId = res.map(res => `${res.id}`);
+                console.log(newRoleId);
+                console.log(employeeId);
+                updateEmployee(newRoleId, employeeId);
+              }
+            );
+          });
+      });
+  });
+}
+function addDepartment() {
+  inquirer
+    .prompt({
+      name: "department",
+      type: "input",
+      message: "What department would you like to add?"
+    })
+    .then(answer => {
+      connection.query(
+        "INSERT INTO departments(department_name) VALUES(?);",
+        [answer.department],
+        err => {
+          if (err) throw err;
+          console.log(
+            `${answer.department} successfully added as a new department!`
+          );
+          prompt();
+        }
+      );
+    });
+}
+
+function addRole() {
+  const query = `SELECT * FROM departments;`;
+  connection.query(query, (err, res) => {
+    const departments = res.map(res => `${res.id} ${res.department_name}`);
+    inquirer
+      .prompt({
+        name: "addRoleDepartment",
+        type: "list",
+        message: "Which department will the new role be in?",
+        choices: departments
+      })
+      .then(answer => {
+        let department = answer.addRoleDepartment;
+        let departmentId = department.replace(/\D/g, "");
+        console.log(departmentId);
+        inquirer
+          .prompt({
+            name: "addRoleTitle",
+            type: "input",
+            message: "What is the new role title?"
+          })
+          .then(answer2 => {
+            connection.query(
+              "INSERT INTO roles(title, salary, department_id) VALUES(?,?,?);",
+              [answer2.addRoleTitle, answer2.addRoleSalary, departmentId],
+              err => {
+                if (err) throw err;
+                console.log(
+                  `${answer2.addRoleTitle} successfully added as a new role!`
+                );
+                addRoleSalary();
+              }
+            );
+          });
+      });
+  });
+}
+function addRoleSalary() {
+  const query = `SELECT * FROM roles;`;
+  connection.query(query, (err, res) => {
+    const roles = res.map(res => `${res.title}`);
+    inquirer
+      .prompt({
+        name: "addRoleSalary",
+        type: "list",
+        message: "Which role's salary would you like to add?",
+        choices: roles
+      })
+      .then(answer => {
+        console.log(answer.addRoleSalary);
+        inquirer
+          .prompt({
+            name: "addRoleSalaryTo",
+            type: "input",
+            message: `Please include only the numbers: What is the salary for ${answer.addRoleSalary}? `
+          })
+          .then(answer2 => {
+            connection.query(
+              `UPDATE roles
+              SET salary=?
+              WHERE title=?;`,
+              [answer2.addRoleSalaryTo, answer.addRoleSalary],
+              err => {
+                if (err) throw err;
+                console.log(
+                  `${answer2.addRoleSalaryTo} salary successfully updated!`
+                );
+                prompt();
+              }
+            );
+          });
+      });
+  });
+}
+function updateEmployee(a, b) {
+  connection.query(
+    `UPDATE employees
+    SET role_id=?
+    WHERE id=?;`,
+    [a, b],
+    (err, res) => {
+      console.log("Success!");
+    }
+  );
+}
